@@ -26,6 +26,11 @@ def categories_per_page(request, selection):
   current_categories = categories[start:end]
   return current_categories
 
+def retrieve_questions(request):
+  questions = Question.query.order_by(Question.id).all()
+  current_questions = questios_per_page(request, questions)
+  return questions, current_questions
+
 
 def create_app(test_config=None):
   # create and configure the app
@@ -79,8 +84,8 @@ def create_app(test_config=None):
   @app.route('/categories')
   def get_categories():
     try:
-      selection = Category.query.order_by(Category.id).all()
-      categories = categories_per_page(request, selection)
+      categories = Category.query.order_by(Category.id).all()
+      current_categories = categories_per_page(request, categories)
 
       if len(categories) == 0:
             abort(404)
@@ -89,8 +94,8 @@ def create_app(test_config=None):
           'success': True,
           'response': 200,
           'response_message': 'OK',
-          'categories': categories,
-          'total_categories': len(selection)
+          'categories': current_categories,
+          'total_categories': len(categories)
         })
 
     except:
@@ -108,8 +113,8 @@ def create_app(test_config=None):
   @app.route('/questions')
   def get_questions():
     try:
-      selection = Question.query.order_by(Question.id).all()
-      questions = questios_per_page(request, selection)
+      questions, current_questions = retrieve_questions(request)
+      #questions = questios_per_page(request, selection)
       selection = Category.query.order_by(Category.id).all()
       categories = [category.type for category in selection]
 
@@ -120,9 +125,9 @@ def create_app(test_config=None):
           'success': True,
           'response': 200,
           'response_message': 'OK',
-          'questions': questions,
-          'total_questions': len(selection),
-          'current_category': 4,
+          'questions': current_questions,
+          'total_questions': len(questions),
+          'current_category': 2,
           'categories': categories
         })
 
@@ -139,7 +144,30 @@ def create_app(test_config=None):
   '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 
+  '''
+  @app.route('/questions/<int:question_id>', methods=['DELETE'])
+  def delete_question(question_id):
+    try:
+      question = Question.query.filter(Question.id == question_id).one_or_none()
 
+      if question is None:
+        abort(404)
+      else:
+        question.delete()
+        questions, current_questions = retrieve_questions(request)
+
+      return jsonify({
+        'success': True,
+        'response': 200,
+        'response_message': 'OK',
+        'deleted': question_id,
+        'questions': current_questions,
+        'total_questions': len(questions)
+      })
+    except:
+      abort(422)
+
+  '''
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
