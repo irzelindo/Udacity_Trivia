@@ -85,7 +85,7 @@ def create_app(test_config=None):
   def get_categories():
     try:
       categories = Category.query.order_by(Category.id).all()
-      current_categories = categories_per_page(request, categories)
+      current_categories = [category.type for category in categories]
 
       if len(categories) == 0:
             abort(404)
@@ -177,7 +177,38 @@ def create_app(test_config=None):
   Create an endpoint to POST a new question, 
   which will require the question and answer text, 
   category, and difficulty score.
+  '''
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+    body = request.get_json()
 
+    new_question = body.get('question')
+    new_answer = body.get('answer')
+    new_category = body.get('category')
+    new_dificulty = body.get('difficulty')
+
+    try:
+      question = Question(question=new_question, answer=new_answer,
+        category=new_category, difficulty=new_dificulty)
+      
+      question.insert()
+
+      questions, current_questions = retrieve_questions(request)
+
+      return jsonify({
+        'success': True,
+        'response': 201,
+        'response_message': 'Created',
+        'created': question.id,
+        'questions': current_questions,
+        'total_questions': len(questions)
+      })
+
+    except:
+      abort(422)  
+
+  
+  '''
   TEST: When you submit a question on the "Add" tab, 
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
