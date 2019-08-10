@@ -178,7 +178,7 @@ def create_app(test_config=None):
   which will require the question and answer text, 
   category, and difficulty score.
   '''
-  @app.route('/questions', methods=['POST'])
+  @app.route('/questions/new', methods=['POST'])
   def create_question():
     body = request.get_json()
 
@@ -219,7 +219,34 @@ def create_app(test_config=None):
   Create a POST endpoint to get questions based on a search term. 
   It should return any questions for whom the search term 
   is a substring of the question. 
+  '''
+  @app.route('/questions/search', methods=['POST'])
+  def search_question():
+    body = request.get_json()
+    search_term = '%{}%'.format(body.get('searchTerm'))
+    #print(search_term)
+    try:
+      filtered_questions = Question.query.filter(Question.question.like(search_term)).all()
+      current_questions = [question.format() for question in filtered_questions]
+      
+      questions, x = retrieve_questions(request)
 
+      #print(current_questions)
+
+      return jsonify({
+        'success': True,
+        'response': 200,
+        'response_message': 'Ok',
+        'current_category': 2,
+        'questions': current_questions,
+        'total_questions': len(questions)
+      })
+    
+    except:
+      abort(400)
+
+
+  '''
   TEST: Search by any phrase. The questions list will update to include 
   only question that include that string within their question. 
   Try using the word "title" to start. 
