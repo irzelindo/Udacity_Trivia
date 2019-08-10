@@ -127,7 +127,7 @@ def create_app(test_config=None):
           'response_message': 'OK',
           'questions': current_questions,
           'total_questions': len(questions),
-          'current_category': 2,
+          'current_category': len(categories),
           'categories': categories
         })
 
@@ -258,6 +258,7 @@ def create_app(test_config=None):
   '''
   @app.route('/categories/<int:category_id>/questions')
   def questions_by_categories(category_id):
+    #print(category_id)
     try:
       category_questions = Question.query.filter(Question.category == category_id).all()
       current_questions = [question.format() for question in category_questions]
@@ -270,7 +271,7 @@ def create_app(test_config=None):
             'success': True,
             'response': 200,
             'response_message': 'OK',
-            'current_category': category_id,
+            'current_category': category_id-1,
             'questions': current_questions,
             'total_questions': len(questions)
           })
@@ -292,7 +293,47 @@ def create_app(test_config=None):
   This endpoint should take category and previous question parameters 
   and return a random questions within the given category, 
   if provided, and that is not one of the previous questions. 
+  '''
+  @app.route('/quizzes', methods=['POST'])
+  def play_quiz():
+    body = request.get_json()
+    category = body.get('quiz_category').get('id') 
+    print(category) 
+    prev_question = body.get('previous_questions')
+    print(prev_question)
+    category_questions = Question.query.filter(Question.category==category).all()
+    questions = [question.format() for question in category_questions]
+    random_number = int(random.random()*len(questions))
+    current_question = questions[random_number]
+    check = True
+    try:
+      while check:
+        print(current_question.get('id'))
+        if current_question.get('id') not in prev_question:
+          return jsonify({
+            'success': True,
+            'response': 200,
+            'response_message': 'OK',
+            'question': current_question
+          })
+        else:
+          if len(questions) > len(prev_question):
+            random_number = int(random.random()*len(questions))
+            current_question = questions[random_number]
+          else:
+            check = False
+      
+      return jsonify({
+        'success': True,
+        'response': 200,
+        'response_message': 'OK',
+        'question': current_question
+      })
+    except:
+      abort(400)
 
+
+  '''
   TEST: In the "Play" tab, after a user selects "All" or a category,
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
