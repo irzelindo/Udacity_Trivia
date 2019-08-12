@@ -92,8 +92,8 @@ def create_app(test_config=None):
       else: 
         return jsonify({
           'success': True,
-          'response': 200,
-          'response_message': 'OK',
+          'status_code': 200,
+          'status_code_message': 'OK',
           'categories': current_categories,
           'total_categories': len(categories)
         })
@@ -118,13 +118,13 @@ def create_app(test_config=None):
       selection = Category.query.order_by(Category.id).all()
       categories = [category.type for category in selection]
 
-      if len(questions) == 0:
+      if len(current_questions) == 0:
             abort(404)
       else: 
         return jsonify({
           'success': True,
-          'response': 200,
-          'response_message': 'OK',
+          'status_code': 200,
+          'status_code_message': 'OK',
           'questions': current_questions,
           'total_questions': len(questions),
           'current_category': len(categories),
@@ -158,8 +158,8 @@ def create_app(test_config=None):
 
       return jsonify({
         'success': True,
-        'response': 200,
-        'response_message': 'OK',
+        'status_code': 200,
+        'status_code_message': 'OK',
         'deleted': question_id,
         'questions': current_questions,
         'total_questions': len(questions)
@@ -182,30 +182,32 @@ def create_app(test_config=None):
   def create_question():
     body = request.get_json()
 
-    new_question = body.get('question')
-    new_answer = body.get('answer')
-    new_category = body.get('category')
-    new_dificulty = body.get('difficulty')
+    if body:
+      new_question = body.get('question')
+      new_answer = body.get('answer')
+      new_category = body.get('category')
+      new_dificulty = body.get('difficulty')
 
-    try:
-      question = Question(question=new_question, answer=new_answer,
-        category=new_category, difficulty=new_dificulty)
-      
-      question.insert()
+      try:
+        question = Question(question=new_question, answer=new_answer,
+          category=new_category, difficulty=new_dificulty)
+        
+        question.insert()
 
-      questions, current_questions = retrieve_questions(request)
+        questions, current_questions = retrieve_questions(request)
 
-      return jsonify({
-        'success': True,
-        'response': 201,
-        'response_message': 'Created',
-        'created': question.id,
-        'questions': current_questions,
-        'total_questions': len(questions)
-      })
-
-    except:
-      abort(422)  
+        return jsonify({
+          'success': True,
+          'status_code': 201,
+          'status_code': 'Created',
+          'created_question': question.id,
+          'questions': current_questions,
+          'total_questions': len(questions)
+        })  
+      except:
+        abort(422)      
+    else:
+      abort(422) 
 
   
   '''
@@ -235,8 +237,8 @@ def create_app(test_config=None):
 
       return jsonify({
         'success': True,
-        'response': 200,
-        'response_message': 'Ok',
+        'status_code': 200,
+        'status_code_message': 'Ok',
         'current_category': 2,
         'questions': current_questions,
         'total_questions': len(questions)
@@ -269,8 +271,8 @@ def create_app(test_config=None):
 
         return jsonify({
             'success': True,
-            'response': 200,
-            'response_message': 'OK',
+            'status_code': 200,
+            'status_code_message': 'OK',
             'current_category': category_id-1,
             'questions': current_questions,
             'total_questions': len(questions)
@@ -312,8 +314,8 @@ def create_app(test_config=None):
         if current_question.get('id') not in prev_question:
           return jsonify({
             'success': True,
-            'response': 200,
-            'response_message': 'OK',
+            'status_code': 200,
+            'status_code_message': 'OK',
             'question': current_question
           })
         else:
@@ -325,8 +327,8 @@ def create_app(test_config=None):
       
       return jsonify({
         'success': True,
-        'response': 200,
-        'response_message': 'OK',
+        'status_code': 200,
+        'status_code_message': 'OK',
         'question': current_question
       })
     except:
@@ -338,13 +340,7 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
-
-  '''
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
-  '''
-  
+ 
   return app
 
     
