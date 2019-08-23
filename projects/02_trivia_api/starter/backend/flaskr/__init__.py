@@ -109,7 +109,7 @@ def create_app(test_config=None):
             categories = Category.query.order_by(Category.id).all()
             current_categories = [category.type for category in categories]
 
-            if categories is None:
+            if not categories:
                 abort(404)
             else:
                 return jsonify({
