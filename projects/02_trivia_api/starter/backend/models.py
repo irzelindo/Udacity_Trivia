@@ -2,8 +2,8 @@
   This file contains all the database connection definition,
   and all the CRUD for category and question tables.
 '''
-#import os
-#import json
+# import os
+# import json
 from sqlalchemy import Column, String, Integer
 from flask_sqlalchemy import SQLAlchemy
 
@@ -21,6 +21,7 @@ setup_db(app)
 
 def setup_db(app, database_path=DATABASE_PATH):
     ''' Database setup '''
+    print(database_path)
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     DB.app = app
@@ -81,15 +82,14 @@ class Category(DB.Model):
     __tablename__ = 'categories'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    type = Column(String)
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, type):
+        self.type = type
 
     def format(self):
         ''' Serialize CAtegory table data for json object '''
         return {
             'id': self.id,
-            'name': self.name
+            'type': self.type
         }
-        

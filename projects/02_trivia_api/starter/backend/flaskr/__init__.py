@@ -11,14 +11,14 @@ QUESTIONS_PER_PAGE = 10
 CATEGORIES_PER_PAGE = 5
 
 
-def questios_per_page(request_object, selection):
+def questios_per_page(request, selection):
     '''
       Returns json formated questions per page
             Parameters:
             <object> request_object
             <object> list
     '''
-    page = request_object.args.get('page', 1, type=int)
+    page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = QUESTIONS_PER_PAGE * page
     questions = [question.format() for question in selection]
@@ -26,14 +26,14 @@ def questios_per_page(request_object, selection):
     return current_questions
 
 
-def categories_per_page(request_object, selection):
+def categories_per_page(request, selection):
     '''
       Returns json formated categories per page
             Parameters:
             <object> request_object
             <object> list
     '''
-    page = request_object.args.get('page', 1, type=int)
+    page = request.args.get('page', 1, type=int)
     start = (page - 1) * CATEGORIES_PER_PAGE
     end = CATEGORIES_PER_PAGE * page
     categories = [category.format() for category in selection]
@@ -41,14 +41,14 @@ def categories_per_page(request_object, selection):
     return current_categories
 
 
-def retrieve_questions(request_object):
+def retrieve_questions(request):
     '''
       Returns json formated total and per page questions
             Parameters:
             <object> request_object
     '''
     questions = Question.query.order_by(Question.id).all()
-    current_questions = questios_per_page(request_object, questions)
+    current_questions = questios_per_page(request, questions)
     return questions, current_questions
 
 
@@ -105,11 +105,12 @@ def create_app(test_config=None):
     @app.route('/categories')
     def get_categories():
         """ Returns json formated categories """
+        # print("Hello")
         try:
             categories = Category.query.order_by(Category.id).all()
             current_categories = [category.type for category in categories]
-
-            if not categories:
+            # print(current_categories)
+            if not current_categories:
                 abort(404)
             else:
                 return jsonify({
@@ -138,11 +139,13 @@ def create_app(test_config=None):
         """
         try:
             questions, current_questions = retrieve_questions(request)
-            #questions = questios_per_page(request, selection)
+            # questions = questios_per_page(request, selection)
             selection = Category.query.order_by(Category.id).all()
             categories = [category.type for category in selection]
+            # print(current_questions)
+            # print(categories)
 
-            if current_questions is None:
+            if not current_questions:
                 abort(404)
             else:
                 return jsonify({
@@ -272,7 +275,7 @@ def create_app(test_config=None):
 
             questions, current_questions = retrieve_questions(request)
 
-            print(current_questions)
+            # print(current_questions)
 
             return jsonify({
                 'success': True,
@@ -310,7 +313,7 @@ def create_app(test_config=None):
                 abort(404)
             else:
                 questions, current_questions = retrieve_questions(request)
-                print(current_questions)
+                # print(current_questions)
 
                 return jsonify({
                     'success': True,

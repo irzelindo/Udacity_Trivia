@@ -15,6 +15,7 @@ class TriviaTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
+        # defining test database
         self.database_name = "trivia_test"
         # self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         self.database_path = "postgresql://{}:{}@{}/{}".format('postgres',
@@ -117,32 +118,63 @@ class TriviaTestCase(unittest.TestCase):
             returns 200 OK status code
             in case of success
         """
-        response = self.client().post('/questions/search', json={})
+        response = self.client().post('/questions/search', json={"searchTerm":"What"})
         data = json.loads(response.data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['message'], 'Ok')
         self.assertTrue(data['questions'])
+
+    def test_questions_by_categories(self):
+        """
+            Test case for /categories/<int:category_id>/questions endpoint
+            to find questions based on provided category,
+            returns 200 OK status code
+            in case of success
+        """
+        response = self.client().get('/categories/2/questions')
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['current_category'])
+        self.assertTrue(data['questions'])
+
+    def test_play_quizzes(self):
+        """
+            Test case for /quizzes endpoint to find questions based on provided category,
+            returns 200 OK status code
+            in case of success
+        """
+        response = self.client().post('/quizzes', json={"quiz_category":{"id":"2"},
+                                                        "previous_questions":[]})
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['question'])
 
     def test_delete_question(self):
         """
             Test case for /questions/id endpoint to delete a question,
             returns 200 OK status code
             in case of success
+            In case the question ID is already deleted try another one
         """
         response = self.client().delete('/questions/2')
         data = json.loads(response.data)
 
         question = Question.query.filter(Question.id == 2).one_or_none()
 
-        print(question)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 2)
-        self.assertTrue(data['questions'])
-        self.assertEqual(question, None)
+        if question is None:
+            self.test_422_if_question_does_not_exist()
+            # print(question)
+        else:
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(data['success'], True)
+            self.assertEqual(data['deleted'], 2)
+            self.assertTrue(data['questions'])
+            self.assertEqual(question, None)
 
     def test_422_if_question_does_not_exist(self):
         """
