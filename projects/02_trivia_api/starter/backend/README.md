@@ -68,13 +68,16 @@ One note before you delve into your tasks: for each endpoint you are expected to
 
 REVIEW_COMMENT
 ```
-This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
+Below is the list of endpoints to get all categories, questions, questions by category, to post new question, quiz answers, search specific question and finally the delete questions endpoint.
 
 Endpoints
 GET '/categories'
-GET ...
-POST ...
-DELETE ...
+GET '/questions[?page=#number]'
+GET '/categories/<int:category_id>/questions'
+POST '/questions/new' 
+POST '/questions/search' 
+POST '/quizzes'
+DELETE '/questions/<int:question_id>'
 
 GET '/categories'
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
@@ -87,6 +90,111 @@ GET '/categories'
 '5' : "Entertainment",
 '6' : "Sports"}
 
+GET '/questions[?page=#number]'
+- Fetches questions list of  objects paginated by 10 questions per page, each question object contains <question>, <answer>, <category>, <difficulty>, and <id> keys and its corresponding values.
+Note: The returned object also contains a static the list of categories provided on GET '/categories' endpoint.
+Example: localhost:5000/questions?page=1 
+The [?page=#number] is an optional parameter.
+Returns...
+{
+    "categories": [
+        "Science",
+        "Art",
+        "Geography",
+        "History",
+        "Entertainment",
+        "Sports"
+    ],
+    "questions": [
+        {
+            "answer": "Apollo 13",
+            "category": 5,
+            "difficulty": 4,
+            "id": 2,
+            "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+        },...
+
+    ],
+    "status_code": 200,
+    "status_code_message": "OK",
+    "success": true,
+    "total_questions": 19
+}
+
+GET '/categories/<int:category_id>/questions'
+- Fetches questions list of  objects filtered by question category.
+Example: localhost:5000/categories/5/questions
+{
+    "current_category": 5,
+    "questions": [
+        {
+            "answer": "Apollo 13",
+            "category": 5,
+            "difficulty": 4,
+            "id": 2,
+            "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+        },...
+    ],
+    "status_code": 200,
+    "status_code_message": "OK",
+    "success": true,
+    "total_questions": 19
+}
+
+POST '/questions/new' 
+- Creates a new question the request body must carry application/json object with <question>, <answer>, <category>, and <difficulty> keys with respective values.
+Example: localhost:5000/questions/new
+body: {"question":"<>", "answer":""<>, "category":"<>", "difficulty":"<>"}
+
+POST '/questions/search' 
+- Fetches questions based on a search term. It should return any questions for whom the search term is a substring of the question.
+Example: localhost:5000/questions/search
+body: {"searchTerm":"What"}
+{
+    "questions": [
+        {
+            "answer": "Muhammad Ali",
+            "category": 4,
+            "difficulty": 1,
+            "id": 9,
+            "question": "What boxer's original name is Cassius Clay?"
+        },
+        {
+            "answer": "Apollo 13",
+            "category": 5,
+            "difficulty": 4,
+            "id": 2,
+            "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+        },...
+    ],
+    "status_code": 200,
+    "status_code_message": "Ok",
+    "success": true,
+    "total_questions": 19
+}
+
+POST '/quizzes'
+- Posts questions category ID and previous questions list to play trivia without repeating the questions on the previous questions list.
+Example: localhost:5000/quizzes
+body: {"quiz_category":{"id":"2"},"previous_questions":[]}
+Returns...
+{
+    "question": {
+        "answer": "One",
+        "category": 2,
+        "difficulty": 4,
+        "id": 18,
+        "question": "How many paintings did Van Gogh sell in his lifetime?"
+    },
+    "status_code": 200,
+    "status_code_message": "OK",
+    "success": true
+}
+
+Note: Default number of questions was defined to 5 in the game, if respective category have less than the default number of questions (5). Questions may be repeated. 
+
+DELETE '/questions/<int:question_id>'
+- Deletes question by it's respetive ID.
 ```
 
 
