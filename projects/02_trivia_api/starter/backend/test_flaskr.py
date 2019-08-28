@@ -1,11 +1,10 @@
 """ This file contains unittests for trivia app """
-# import os
+
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
-
 from flaskr import create_app
-from models import setup_db, Question, Category
+from models import setup_db, Question
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -32,15 +31,14 @@ class TriviaTestCase(unittest.TestCase):
             self.db.create_all()
 
         self.new_question = {
-            'new_question':'Who is the current president of U.S.A',
-            'new_answer':'Donald Trump',
+            'new_question': 'Who is the current president of U.S.A',
+            'new_answer': 'Donald Trump',
             'new_category': 4,
-            'new_dificulty':'2'
+            'new_difficulty': '2'
         }
 
     def tearDown(self):
         """Executed after reach test"""
-
 
     # @TODO
     # Write at least one test for each test for successful operation and for expected errors.
@@ -118,7 +116,7 @@ class TriviaTestCase(unittest.TestCase):
             returns 200 OK status code
             in case of success
         """
-        response = self.client().post('/questions/search', json={"searchTerm":"What"})
+        response = self.client().post('/questions/search', json={"searchTerm": "What"})
         data = json.loads(response.data)
 
         self.assertEqual(response.status_code, 200)
@@ -146,13 +144,30 @@ class TriviaTestCase(unittest.TestCase):
             returns 200 OK status code
             in case of success
         """
-        response = self.client().post('/quizzes', json={"quiz_category":{"id":"2"},
-                                                        "previous_questions":[]})
+        response = self.client().post('/quizzes', json={"quiz_category": {"id": "2"},
+                                                        "previous_questions": [],
+                                                        "questions_per_play": 5})
         data = json.loads(response.data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(data['question'])
+
+    def test_play_quizzes_error(self):
+        """
+            Test case for /quizzes endpoint to find questions based on provided category,
+            returns 200 Ok status code
+            in case of failure, in case the previous_question list
+            has equal or more elements than the number of questions in each category
+        """
+        response = self.client().post('/quizzes', json={"quiz_category": {"id": "1"},
+                                                        "questions_per_play": 5,
+                                                        "previous_questions": [21, 20, 22]})
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['question'], False)
 
     def test_delete_question(self):
         """
@@ -167,7 +182,7 @@ class TriviaTestCase(unittest.TestCase):
         question = Question.query.filter(Question.id == 2).one_or_none()
 
         if question is None:
-            self.test_422_if_question_does_not_exist()
+            self.test_404_if_question_does_not_exist()
             # print(question)
         else:
             self.assertEqual(response.status_code, 200)
@@ -176,19 +191,18 @@ class TriviaTestCase(unittest.TestCase):
             self.assertTrue(data['questions'])
             self.assertEqual(question, None)
 
-    def test_422_if_question_does_not_exist(self):
+    def test_404_if_question_does_not_exist(self):
         """
             Test case for /questions/id endpoint to delete a question,
-            returns 422 Unprocessable Request status code
+            returns 404 Resource Not found status code
             in case of error
         """
         response = self.client().delete('/questions/150')
         data = json.loads(response.data)
 
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'Unprocessable Request')
-
+        self.assertEqual(data['message'], 'Resource Not found')
 
 
 # Make the tests conveniently executable

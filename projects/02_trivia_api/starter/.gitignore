@@ -6,7 +6,8 @@ bin
 include
 lib
 /frontend/node_modules
-
+__pycache__
+pip
 # OS generated files #
 ######################
 .DS_Store

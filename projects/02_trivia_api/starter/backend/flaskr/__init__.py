@@ -1,8 +1,7 @@
-''' Trivia API end points '''
-import os
+""" Trivia API end points """
+
 import random
-from flask import Flask, request, abort, jsonify, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 
 from models import setup_db, Question, Category
@@ -11,13 +10,13 @@ QUESTIONS_PER_PAGE = 10
 CATEGORIES_PER_PAGE = 5
 
 
-def questios_per_page(request, selection):
-    '''
-      Returns json formated questions per page
+def questions_per_page(request, selection):
+    """
+      Returns json formatted questions per page
             Parameters:
             <object> request_object
             <object> list
-    '''
+    """
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = QUESTIONS_PER_PAGE * page
@@ -27,12 +26,12 @@ def questios_per_page(request, selection):
 
 
 def categories_per_page(request, selection):
-    '''
-      Returns json formated categories per page
+    """
+      Returns json formatted categories per page
             Parameters:
             <object> request_object
             <object> list
-    '''
+    """
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * CATEGORIES_PER_PAGE
     end = CATEGORIES_PER_PAGE * page
@@ -42,14 +41,20 @@ def categories_per_page(request, selection):
 
 
 def retrieve_questions(request):
-    '''
-      Returns json formated total and per page questions
+    """
+      Returns json formatted total and per page questions
             Parameters:
             <object> request_object
-    '''
+    """
     questions = Question.query.order_by(Question.id).all()
-    current_questions = questios_per_page(request, questions)
+    current_questions = questions_per_page(request, questions)
     return questions, current_questions
+
+
+def list_categories():
+    categories = Category.query.order_by(Category.id.asc()).all()
+    current_categories = [category.type for category in categories]
+    return current_categories
 
 
 def create_app(test_config=None):
@@ -104,26 +109,24 @@ def create_app(test_config=None):
 
     @app.route('/categories')
     def get_categories():
-        """ Returns json formated categories """
+        """ Returns json formatted categories """
         # print("Hello")
         try:
-            categories = Category.query.order_by(Category.id).all()
-            current_categories = [category.type for category in categories]
+            categories = list_categories()
             # print(current_categories)
-            if not current_categories:
+            if not categories:
                 abort(404)
             else:
                 return jsonify({
                     'success': True,
                     'status_code': 200,
                     'status_code_message': 'OK',
-                    'categories': current_categories,
+                    'categories': categories,
                     'total_categories': len(categories)
                 })
 
-        except:
+        except ImportError:
             abort(404)
-
 
     # @TODO:
     # Create an endpoint to handle GET requests for questions,
@@ -134,12 +137,11 @@ def create_app(test_config=None):
     @app.route('/questions')
     def get_questions():
         """
-          Returns json formated total questions,questions per page
-          Current Category and json formated categories
+          Returns json formatted total questions,questions per page
+          Current Category and json formatted categories
         """
         try:
             questions, current_questions = retrieve_questions(request)
-            # questions = questios_per_page(request, selection)
             selection = Category.query.order_by(Category.id).all()
             categories = [category.type for category in selection]
             # print(current_questions)
@@ -158,15 +160,13 @@ def create_app(test_config=None):
                     'categories': categories
                 })
 
-        except:
+        except ImportError:
             abort(404)
-
 
     # TEST: At this point, when you start the application
     # you should see questions and categories generated,
     # ten questions per page and pagination at the bottom of the screen for three pages.
     # Clicking on the page numbers should update the questions.
-
 
     # @TODO:
     # Create an endpoint to DELETE question using a question ID.
@@ -175,7 +175,7 @@ def create_app(test_config=None):
     def delete_question(question_id):
         """
           Deletes requested question and
-          returns json formated response with deleted question ID,
+          returns json formatted response with deleted question ID,
           total questions and current questions per page
         """
         try:
@@ -196,14 +196,11 @@ def create_app(test_config=None):
                 'questions': current_questions,
                 'total_questions': len(questions)
             })
-        except:
-            abort(422)
-
+        except ImportError:
+            abort(404)
 
     # TEST: When you click the trash icon next to a question, the question will be removed.
     # This removal will persist in the database and when you refresh the page.
-
-
 
     # @TODO:
     # Create an endpoint to POST a new question,
@@ -214,7 +211,7 @@ def create_app(test_config=None):
     def create_question():
         """
           Creates a new question and
-          returns json formated response with 201 created response code,
+          returns json formatted response with 201 created response code,
           created question ID, total questions and current questions per page
         """
         body = request.get_json()
@@ -223,11 +220,11 @@ def create_app(test_config=None):
             new_question = body.get('question')
             new_answer = body.get('answer')
             new_category = body.get('category')
-            new_dificulty = body.get('difficulty')
+            new_difficulty = body.get('difficulty')
 
             try:
                 question = Question(question=new_question, answer=new_answer,
-                                    category=new_category, difficulty=new_dificulty)
+                                    category=new_category, difficulty=new_difficulty)
 
                 question.insert()
 
@@ -241,16 +238,14 @@ def create_app(test_config=None):
                     'questions': current_questions,
                     'total_questions': len(questions)
                 })
-            except:
+            except ImportError:
                 abort(422)
         else:
             abort(422)
 
-
     # TEST: When you submit a question on the "Add" tab,
     # the form will clear and the question will appear at the end of the last page
     # of the questions list in the "List" tab.
-
 
     # @TODO:
     # Create a POST endpoint to get questions based on a search term.
@@ -261,7 +256,7 @@ def create_app(test_config=None):
     def search_question():
         """
           Searches for posted string like question and
-          returns json formated response with 200 OK response code,
+          returns json formatted response with 200 OK response code,
           matched questions, total questions;
         """
         body = request.get_json()
@@ -269,7 +264,7 @@ def create_app(test_config=None):
         # print(search_term)
         try:
             filtered_questions = Question.query.filter(
-                Question.question.like(search_term)).all()
+                Question.question.ilike(search_term)).all()
             found_questions = [question.format()
                                for question in filtered_questions]
 
@@ -286,14 +281,12 @@ def create_app(test_config=None):
                 'total_questions': len(questions)
             })
 
-        except:
+        except ImportError:
             abort(400)
-
 
     # TEST: Search by any phrase. The questions list will update to include
     # only question that include that string within their question.
     # Try using the word "title" to start.
-
 
     # @TODO:
     # Create a GET endpoint to get questions based on category.
@@ -301,12 +294,14 @@ def create_app(test_config=None):
     @app.route('/categories/<int:category_id>/questions')
     def questions_by_categories(category_id):
         """
-          returns json formated questions by provided category,
+          returns json formatted questions by provided category,
         """
         # print(category_id)
         try:
             category_questions = Question.query.filter(
-                Question.category == category_id).all()
+                Question.category == str(category_id)).all()
+            categories = list_categories()
+            # print(categories)
             filtered_questions = [question.format()
                                   for question in category_questions]
             if not filtered_questions:
@@ -319,18 +314,17 @@ def create_app(test_config=None):
                     'success': True,
                     'status_code': 200,
                     'status_code_message': 'OK',
-                    'current_category': category_id-1,
+                    'current_category': categories[category_id - 1],
                     'questions': filtered_questions,
                     'total_questions': len(questions)
                 })
 
-        except:
+        except ImportError:
             abort(422)
 
     # TEST: In the "List" tab / main screen, clicking on one of the
     # categories in the left column will cause only questions of that
     # category to be shown.
-
 
     # @TODO:
     # Create a POST endpoint to get questions to play the quiz.
@@ -344,49 +338,66 @@ def create_app(test_config=None):
           returns random not repeated questions within the provided category
           for the quiz game play
         """
-        body = request.get_json()
-        category = body.get('quiz_category').get('id')
-        # print(category)
-        prev_question = body.get('previous_questions')
-        # print(prev_question)
-        category_questions = Question.query.filter(
-            Question.category == category).all()
-        questions = [question.format() for question in category_questions]
-        # Picks a random question based on the questions list lenght.
-        random_number = int(random.random()*len(questions))
-        current_question = questions[random_number]
-        check = True
         try:
-            while check:
-                # print(current_question.get('id'))
-                # Returns the question in case the provided question
-                # is not in the previous_question list of questions
-                if current_question.get('id') not in prev_question:
-                    return jsonify({
-                        'success': True,
-                        'status_code': 200,
-                        'status_code_message': 'OK',
-                        'question': current_question
-                    })
+            body = request.get_json()
+            # category is a string type print the type below
+            category = body.get('quiz_category').get('id')
+            # print(type(category))
+            quiz_num_questions = body.get('questions_per_play')
+            prev_question = body.get('previous_questions')
+            categories = [category.format().get('id') for category in
+                          Category.query.all()]
+            # print(categories)
+            for i in range(quiz_num_questions):
+                if category == 0:
+                    category = int(random.random() * len(categories))
+                    category_questions = Question.query.filter(
+                        Question.category == category).all()
+                    questions = [question.format() for question in category_questions]
+                    random_number = int(random.random() * len(questions))
+                    current_question = questions[random_number]
+                    if current_question.get('id') not in prev_question:
+                        return jsonify({
+                            'success': True,
+                            'status_code': 200,
+                            'status_code_message': 'OK',
+                            'question': current_question
+                        })
+
                 else:
-                    if len(questions) > len(prev_question):
-                        random_number = int(random.random()*len(questions))
-                        current_question = questions[random_number]
+                    # print(prev_question)
+                    category_questions = Question.query.filter(
+                        Question.category == category).all()
+                    questions = [question.format() for question in category_questions]
+                    # Picks a random question based on the questions list length.
+                    random_number = int(random.random() * len(questions))
+                    current_question = questions[random_number]
+
+                    # Returns the question in case the provided question
+                    # is not in the previous_question list of questions
+                    if current_question.get('id') not in prev_question:
+                        return jsonify({
+                            'success': True,
+                            'status_code': 200,
+                            'status_code_message': 'OK',
+                            'question': current_question
+                        })
                     else:
-                        check = False
-
-            return jsonify({
-                'success': True,
-                'status_code': 200,
-                'status_code_message': 'OK',
-                'question': current_question
-            })
-        except:
-            abort(400)
-
+                        if i + 1 > len(questions):
+                            return jsonify({
+                                'success': False,
+                                'status_code': 200,
+                                'status_code_message': 'Ok',
+                                'question': False
+                            })
+                        else:
+                            continue
+        except ImportError:
+            abort(422)
 
     # TEST: In the "Play" tab, after a user selects "All" or a category,
     # one question at a time is displayed, the user is allowed to answer
     # and shown whether they were correct or not.
+    # Completed
 
     return app

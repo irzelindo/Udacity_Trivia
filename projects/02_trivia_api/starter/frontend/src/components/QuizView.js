@@ -35,7 +35,7 @@ class QuizView extends Component {
     })
   }
 
-  selectCategory = ({type, id=1}) => {
+  selectCategory = ({type, id=0}) => {
     this.setState({quizCategory: {type, id}}, this.getNextQuestion)
   }
 
@@ -54,7 +54,8 @@ class QuizView extends Component {
       contentType: 'application/json',
       data: JSON.stringify({
         previous_questions: previousQuestions,
-        quiz_category: this.state.quizCategory
+        quiz_category: this.state.quizCategory,
+        questions_per_play: questionsPerPlay
       }),
       xhrFields: {
         withCredentials: true
